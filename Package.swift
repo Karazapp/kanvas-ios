@@ -15,30 +15,16 @@ let package = Package(
             targets: ["Kanvas"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/TimOliver/TOCropViewController.git", branch: "main"),
-        .package(url: "https://github.com/uber/ios-snapshot-test-case.git", from: "8.0.0"),
+        .package(url: "https://github.com/TimOliver/TOCropViewController.git", from: "2.7.3")
     ],
     targets: [
         .target(
             name: "Kanvas",
             dependencies: [.product(name: "CropViewController", package: "TOCropViewController")],
-            path: "Classes",
-            resources: [.process("Resources")]
-        ),
-        .target(
-            name: "KanvasExample",
-            dependencies: ["Kanvas"],
-            path: "Example/KanvasExample",
-            resources: [.process("Resources")]
-        ),
-        .testTarget(
-            name: "KanvasTests",
-            dependencies: [
-                "Kanvas",
-                "KanvasExample",
-                .product(name: "iOSSnapshotTestCase", package: "ios-snapshot-test-case")
-            ],
-            path: "Example/KanvasExampleTests"
+            path: "Sources",
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )
