@@ -771,7 +771,7 @@ public final class EditorViewController: UIViewController, MediaPlayerController
 
     private func startExporting(action: KanvasExportAction) {
         player.stop()
-        showLoading()
+//        showLoading()
         let archive: Data
         do {
             archive = try NSKeyedArchiver.archivedData(withRootObject: edit, requiringSecureCoding: true)

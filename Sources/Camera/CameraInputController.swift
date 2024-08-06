@@ -58,8 +58,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
         if filteredInputViewControllerInstance == nil {
             if settings.features.openGLPreview || settings.features.metalPreview {
                 filteredInputViewControllerInstance = FilteredInputViewController(delegate: self, settings: settings)
-            }
-            else {
+            } else {
                 filteredInputViewControllerInstance = nil
             }
         }
@@ -70,8 +69,8 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
     private let previewBlurView = UIVisualEffectView(effect: CameraInputController.blurEffect())
     private let flashLayer = CALayer()
     private let sessionQueue = DispatchQueue(label: CameraInputConstants.sessionQueue)
-    private let videoQueue: DispatchQueue = DispatchQueue(label: CameraInputConstants.videoQueue, attributes: [], target: DispatchQueue.global(qos: .userInteractive))
-    private let audioQueue: DispatchQueue = DispatchQueue(label: CameraInputConstants.audioQueue, attributes: [])
+    private let videoQueue: DispatchQueue = DispatchQueue(label: CameraInputConstants.videoQueue, qos: .userInteractive)
+    private let audioQueue: DispatchQueue = DispatchQueue(label: CameraInputConstants.audioQueue, qos: .userInitiated)
     private let isSimulator = Device.isRunningInSimulator
 
     private var settings: CameraSettings
@@ -175,8 +174,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
 
         if filteredInputViewController != nil {
             setupFilteredPreview()
-        }
-        else {
+        } else {
             setupPreview()
         }
 
@@ -458,8 +456,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
                     device.focusMode = .autoFocus
                 }
                 device.unlockForConfiguration()
-            }
-            catch {
+            } catch {
                 // not sure if all devices have focus / exposure.
                 NSLog("unable to focus for current camera")
                 throw CameraInputError.inputsAreInvalid
@@ -575,11 +572,11 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
     }
 
     private func configureCaptureDevices() throws {
-        var cameraDeviceTypes: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera, .builtInDualCamera, .builtInTripleCamera, .builtInDualWideCamera, .builtInTelephotoCamera, .builtInTrueDepthCamera, .builtInUltraWideCamera]
+        var cameraDeviceTypes: [AVCaptureDevice.DeviceType] = [.builtInDualCamera, .builtInWideAngleCamera/*, .builtInTripleCamera, .builtInDualWideCamera, .builtInTelephotoCamera, .builtInTrueDepthCamera, .builtInUltraWideCamera*/]
         if #available(iOS 17.0, *) {
-            cameraDeviceTypes.append(.builtInLiDARDepthCamera)
-            cameraDeviceTypes.append(.external)
-            cameraDeviceTypes.append(.continuityCamera)
+//            cameraDeviceTypes.append(.builtInLiDARDepthCamera)
+//            cameraDeviceTypes.append(.external)
+//            cameraDeviceTypes.append(.continuityCamera)
         }
         let cameraSession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraDeviceTypes, mediaType: AVMediaType.video, position: .unspecified)
         
@@ -602,6 +599,12 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
                 camera.focusMode = .continuousAutoFocus
                 camera.unlockForConfiguration()
             }
+            let currentMaxFrameRate: Int32 = camera.activeVideoMaxFrameDuration.timescale
+            let newMaxFrameRate: Int32 = currentMaxFrameRate == targetFrameRate ? targetFrameRate - 1 : targetFrameRate
+            try camera.lockForConfiguration()
+            camera.activeVideoMinFrameDuration = CMTimeMake(value: 1, timescale: minimumFrameRate)
+            camera.activeVideoMaxFrameDuration = CMTimeMake(value: 1, timescale: newMaxFrameRate)
+            camera.unlockForConfiguration()
         }
         
         if #available(iOS 17.0, *) {
@@ -640,8 +643,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
         photoOutput.setPreparedPhotoSettingsArray([AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])], completionHandler: nil)
         if captureSession.canAddOutput(photoOutput) {
             captureSession.addOutput(photoOutput)
-        }
-        else { throw CameraInputError.invalidOperation }
+        } else { throw CameraInputError.invalidOperation }
     }
 
     /// Must be called from the sessionQueue.
@@ -707,8 +709,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
             captureSession.addInput(otherCameraInput)
             self.currentCameraInput = otherCameraInput
             currentCameraPosition = otherCamera == frontCamera ? .front : .back
-        }
-        else {
+        } else {
             throw CameraInputError.invalidOperation
         }
     }
@@ -847,6 +848,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
                     device.activeVideoMaxFrameDuration = CMTimeMake(value: 1, timescale: newMaxFrameRate)
                     device.unlockForConfiguration()
                     session.commitConfiguration()
+                    print("Adjusted framerate to recover from OutOfBuffers to", newMaxFrameRate)
                 } catch {
                     assertionFailure("Failed to lock the device for configuration: \(error)")
                 }
