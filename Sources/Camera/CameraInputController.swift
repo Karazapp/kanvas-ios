@@ -649,27 +649,25 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
         guard let captureSession = self.captureSession else { throw CameraInputError.captureSessionIsMissing }
 
         let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.alwaysDiscardsLateVideoFrames = false
+        videoOutput.alwaysDiscardsLateVideoFrames = true // Change to true to discard late frames
         videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
 
         if captureSession.canAddOutput(videoOutput) {
             captureSession.addOutput(videoOutput)
+        } else {
+            throw CameraInputError.invalidOperation
         }
-        else { throw CameraInputError.invalidOperation }
         videoDataOutput = videoOutput
-
         videoDataOutput?.setSampleBufferDelegate(self, queue: videoQueue)
     }
 
     private func configureAudioDataOutput() throws {
         guard let captureSession = self.captureSession else { throw CameraInputError.captureSessionIsMissing }
-
         do {
             let audioOutput = AVCaptureAudioDataOutput()
             if captureSession.canAddOutput(audioOutput) {
                 captureSession.addOutput(audioOutput)
-            }
-            else {
+            } else {
                 throw CameraInputError.invalidOperation
             }
             audioDataOutput = audioOutput
