@@ -537,7 +537,7 @@ final class EditorView: UIView, MovableViewCanvasDelegate, MediaPlayerViewDelega
 
             if showMuteButton {
                 leftButton = muteButton
-                leadingMargin = confirmAtTop ? 0 : 12//EditorViewConstants.saveButtonHorizontalMargin
+                leadingMargin = confirmAtTop ? 0 : 4 //EditorViewConstants.saveButtonHorizontalMargin
             } else {
                 leftButton = nil
                 leadingMargin = 0

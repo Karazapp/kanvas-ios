@@ -770,8 +770,8 @@ public final class EditorViewController: UIViewController, MediaPlayerController
     // MARK: - Media Exporting
 
     private func startExporting(action: KanvasExportAction) {
-        player.stop()
-//        showLoading()
+        player.pause()
+        showLoading()
         let archive: Data
         do {
             archive = try NSKeyedArchiver.archivedData(withRootObject: edit, requiringSecureCoding: true)
@@ -818,8 +818,7 @@ public final class EditorViewController: UIViewController, MediaPlayerController
                     }
                 }
             }
-        }
-        else {
+        } else {
             assetsHandler.mergeAssets(segments: segments, withAudio: isMuted == false) { [weak self] url, mediaInfo in
                 guard let url = url else {
                     self?.handleExportError()
@@ -830,6 +829,8 @@ public final class EditorViewController: UIViewController, MediaPlayerController
                 }
             }
         }
+        hideLoading()
+        player.resume()
     }
 
     public func export(_ completion: @escaping (Result<ExportResult, Error>) -> Void) {
