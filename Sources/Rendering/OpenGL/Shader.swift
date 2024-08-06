@@ -58,7 +58,7 @@ class Shader {
     class func getSourceCode(_ name: String, type: ShaderExtension) -> String? {
         let extString: String = type.rawValue
         let bundle = Bundle.module
-        guard let path = bundle.path(forResource: String("\(ShaderConstants.shaderDirectory)/\(name)"), ofType: extString) else {
+        guard let path = bundle.path(forResource: name, ofType: extString) else {
                 return nil
         }
         do {

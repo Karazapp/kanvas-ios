@@ -537,12 +537,12 @@ final class EditorView: UIView, MovableViewCanvasDelegate, MediaPlayerViewDelega
 
             if showMuteButton {
                 leftButton = muteButton
-                leadingMargin = EditorViewConstants.saveButtonHorizontalMargin
+                leadingMargin = confirmAtTop ? 0 : 12//EditorViewConstants.saveButtonHorizontalMargin
             } else {
                 leftButton = nil
                 leadingMargin = 0
             }
-
+            
             if confirmAtTop {
                 xAnchor = safeAreaLayoutGuide.trailingAnchor
                 trailingMargin = 0
@@ -556,23 +556,29 @@ final class EditorView: UIView, MovableViewCanvasDelegate, MediaPlayerViewDelega
                     trailingMargin = confirmOrPostButtonHorizontalMargin()
                 }
             }
-
+            
             let verticalPositioning: [NSLayoutConstraint]
             if confirmAtTop {
-                verticalPositioning = [collectionContainer.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -KanvasEditorDesign.shared.editorViewButtonBottomMargin)]
+//                verticalPositioning = [collectionContainer.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -KanvasEditorDesign.shared.editorViewButtonBottomMargin)]
+                verticalPositioning = [collectionContainer.bottomAnchor.constraint(equalTo: confirmOrPostButton().topAnchor, constant: -12)]
             } else {
                 verticalPositioning = [collectionContainer.centerYAnchor.constraint(equalTo: confirmOrPostButton().centerYAnchor)]
             }
-
+            let leadingPositioning: [NSLayoutConstraint]
+            if confirmAtTop {
+                leadingPositioning = [collectionContainer.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 0)]
+            } else {
+                leadingPositioning = [collectionContainer.leadingAnchor.constraint(equalTo: leftButton?.trailingAnchor ?? safeAreaLayoutGuide.leadingAnchor, constant: leadingMargin)]
+            }
+            
             let leftButtonConstraints = [
-                leftButton?.centerYAnchor.constraint(equalTo: collectionContainer.centerYAnchor)
+                leftButton?.centerYAnchor.constraint(equalTo: confirmOrPostButton().centerYAnchor)
             ].compactMap { $0 }
 
             NSLayoutConstraint.activate([
-                collectionContainer.leadingAnchor.constraint(equalTo: leftButton?.trailingAnchor ?? safeAreaLayoutGuide.leadingAnchor, constant: leadingMargin),
                 collectionContainer.trailingAnchor.constraint(equalTo: xAnchor, constant: -trailingMargin / 2),
                 collectionContainer.heightAnchor.constraint(equalToConstant: EditionMenuCollectionView.height),
-            ] + verticalPositioning + leftButtonConstraints)
+            ] + verticalPositioning + leftButtonConstraints + leadingPositioning)
         }
     }
     

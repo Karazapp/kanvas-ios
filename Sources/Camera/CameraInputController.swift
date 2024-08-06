@@ -575,8 +575,14 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
     }
 
     private func configureCaptureDevices() throws {
-        let cameraSession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera, .builtInDualCamera], mediaType: AVMediaType.video, position: .unspecified)
-
+        var cameraDeviceTypes: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera, .builtInDualCamera, .builtInTripleCamera, .builtInDualWideCamera, .builtInTelephotoCamera, .builtInTrueDepthCamera, .builtInUltraWideCamera]
+        if #available(iOS 17.0, *) {
+            cameraDeviceTypes.append(.builtInLiDARDepthCamera)
+            cameraDeviceTypes.append(.external)
+            cameraDeviceTypes.append(.continuityCamera)
+        }
+        let cameraSession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraDeviceTypes, mediaType: AVMediaType.video, position: .unspecified)
+        
         let cameras = cameraSession.devices
         guard !cameras.isEmpty else { throw CameraInputError.noCamerasAvailable }
 
@@ -598,8 +604,13 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
             }
         }
         
-        let microphoneSession =  AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaType.audio, position: .unspecified)
-        microphone = microphoneSession.devices.first
+        if #available(iOS 17.0, *) {
+            let microphoneSession =  AVCaptureDevice.DiscoverySession(deviceTypes: [.microphone], mediaType: AVMediaType.audio, position: .unspecified)
+            microphone = microphoneSession.devices.first
+        } else {
+            let microphoneSession =  AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaType.audio, position: .unspecified)
+            microphone = microphoneSession.devices.first
+        }
     }
 
     /// Configures Camera Inputs. Must be called from the sessionQueue.
@@ -638,7 +649,7 @@ final class CameraInputController: UIViewController, CameraRecordingDelegate, AV
         guard let captureSession = self.captureSession else { throw CameraInputError.captureSessionIsMissing }
 
         let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.alwaysDiscardsLateVideoFrames = false
         videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
 
         if captureSession.canAddOutput(videoOutput) {

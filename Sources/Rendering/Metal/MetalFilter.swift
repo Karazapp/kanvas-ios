@@ -129,10 +129,10 @@ class MetalFilter: FilterProtocol {
     
     func processPixelBuffer(_ pixelBuffer: CVPixelBuffer?, time: TimeInterval) -> CVPixelBuffer? {
         guard
-            let commandBuffer = context.commandQueue.makeCommandBuffer(),
-            let computeEncoder = commandBuffer.makeComputeCommandEncoder(),
             let pixelBuffer = pixelBuffer,
-            let offScreenTexture = offScreenTexture
+            let offScreenTexture = offScreenTexture,
+            let commandBuffer = context.commandQueue.makeCommandBuffer(),
+            let computeEncoder = commandBuffer.makeComputeCommandEncoder()
         else {
             return nil
         }
@@ -168,6 +168,7 @@ class MetalFilter: FilterProtocol {
             let inputTexture = CVMetalTextureGetTexture(unwrappedCVTexture),
             result == kCVReturnSuccess
         else {
+            computeEncoder.endEncoding()
             return nil
         }
         
